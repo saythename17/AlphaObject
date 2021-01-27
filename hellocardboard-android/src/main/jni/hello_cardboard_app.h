@@ -26,6 +26,8 @@
 #include <vector>
 
 #include <GLES2/gl2.h>
+#include <stdlib.h>
+#include <math.h>
 #include "cardboard.h"
 #include "util.h"
 
@@ -158,6 +160,22 @@ class HelloCardboardApp {
    */
   bool IsPointingAtTarget();
 
+  /*
+   * Matrix Calculation
+   */
+  void SetIdentityMatrix(float *m) {
+      memset((void*)m, 0, 16*sizeof(float));
+      m[0] = m[5] = m [10] = m[15] = 1.0f;
+  }
+
+  void SetRotateMatrix(float *m, float a, float x, float y, float z) {
+      float s,c;
+      memset((void*)m, 0, 15*sizeof(float));
+  }
+  /*
+   *
+   */
+
   jobject java_asset_mgr_;
   AAssetManager* asset_mgr_;
 
@@ -186,6 +204,7 @@ class HelloCardboardApp {
   GLuint obj_modelview_projection_param_;
 
   Matrix4x4 head_view_;
+  Matrix4x4 head_view_dog_;
   Matrix4x4 model_target_;
   Matrix4x4 model_dog_;
   Matrix4x4 modelview_rotate_;
@@ -196,6 +215,14 @@ class HelloCardboardApp {
 
   TexturedMesh room_;
   Texture room_tex_;
+
+#define PI 3.1415926f
+#define normalize(x, y, z)                  \
+{                                               \
+        float norm = 1.0f / sqrt(x*x+y*y+z*z);  \
+        x *= norm; y *= norm; z *= norm;        \
+}
+#define I(_i, _j) ((_j)+4*(_i))
 
   /*
    * dog object

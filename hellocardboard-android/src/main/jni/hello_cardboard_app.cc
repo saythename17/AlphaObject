@@ -20,6 +20,7 @@
 #include <android/asset_manager_jni.h>
 #include <android/log.h>
 
+
 #include <array>
 #include <cmath>
 #include <fstream>
@@ -161,9 +162,10 @@ void HelloCardboardApp::OnSurfaceCreated(JNIEnv* env) {
   HELLOCARDBOARD_CHECK(target_object_selected_textures_[2].Initialize(
       env, java_asset_mgr_, "TriSphere_Pink_BakedDiffuse.png"));
 
+
   // Target object first appears directly in front of user.
-  model_target_ = GetTranslationMatrix({0.0f, 1.5f, kMinTargetDistance});
-  model_dog_ = GetTranslationMatrix({5.0f, 3.0f, 10.0f});
+  model_target_ = GetTranslationMatrix({1.0f, 1.5f, kMinTargetDistance});
+  model_dog_ = GetTranslationMatrix({3.0f, 3.0f, 10.0f});
 
   CHECKGLERROR("OnSurfaceCreated");
 }
@@ -181,10 +183,14 @@ void HelloCardboardApp::OnDrawFrame() {
 
   // Update Head Pose.
   head_view_ = GetPose();
+  head_view_dog_ = GetPose();
 
   // Incorporate the floor height into the head_view
   head_view_ =
       head_view_ * GetTranslationMatrix({0.0f, kDefaultFloorHeight, 0.0f});
+  head_view_dog_ =
+          head_view_dog_ * GetTranslationMatrix({0.5f, kDefaultFloorHeight, 0.5f});
+
 
   // Bind buffer
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
@@ -203,11 +209,17 @@ void HelloCardboardApp::OnDrawFrame() {
 
     Matrix4x4 eye_matrix = GetMatrixFromGlArray(eye_matrices_[eye]);
     Matrix4x4 eye_view = eye_matrix * head_view_;
+    /*
+     *
+     */
+    Matrix4x4 eye_view_dog = eye_matrix * head_view_dog_;
+    Matrix4x4 translation = GetTranslationMatrix({2.0f,2.0f,2.0f});
+    eye_view_dog = eye_view_dog * translation;
 
     Matrix4x4 projection_matrix =
         GetMatrixFromGlArray(projection_matrices_[eye]);
     Matrix4x4 modelview_target = eye_view * model_target_;
-    Matrix4x4 modelview_dog_ = eye_view * model_dog_;
+    Matrix4x4 modelview_dog_ = eye_view_dog * model_dog_;
 
     modelview_projection_target_ = projection_matrix * modelview_target;
     modelview_projection_room_ = projection_matrix * eye_view;
@@ -427,9 +439,10 @@ void HelloCardboardApp::DrawRoom() {
 void HelloCardboardApp::DrawDog() {
   glUseProgram(obj_program_);
 
-  std::array<float, 16> room_array = modelview_projection_dog_.ToGlArray();
+  std::array<float, 16> dog_array = modelview_projection_dog_.ToGlArray();
   glUniformMatrix4fv(obj_modelview_projection_param_, 1, GL_FALSE,
-                     room_array.data());
+                     dog_array.data());
+
 
   dog_tex_.Bind();
   dog_.Draw();
