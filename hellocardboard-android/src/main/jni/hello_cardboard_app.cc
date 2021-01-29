@@ -15,15 +15,7 @@
  */
 
 #include "hello_cardboard_app.h"
-
-#include <android/asset_manager.h>
-#include <android/asset_manager_jni.h>
-#include <android/log.h>
-
-
-#include <array>
-#include <cmath>
-#include <fstream>
+#include "myLogic.h"
 
 namespace ndk_hello_cardboard {
 
@@ -165,7 +157,7 @@ void HelloCardboardApp::OnSurfaceCreated(JNIEnv* env) {
 
   // Target object first appears directly in front of user.
   model_target_ = GetTranslationMatrix({1.0f, 1.5f, kMinTargetDistance});
-  model_dog_ = GetTranslationMatrix({3.0f, 3.0f, 10.0f});
+  model_dog_ = GetTranslationMatrix({1.0f,  kDefaultFloorHeight - 0.01f , 1.0f - kMaxTargetDistance});
 
   CHECKGLERROR("OnSurfaceCreated");
 }
@@ -188,9 +180,31 @@ void HelloCardboardApp::OnDrawFrame() {
   // Incorporate the floor height into the head_view
   head_view_ =
       head_view_ * GetTranslationMatrix({0.0f, kDefaultFloorHeight, 0.0f});
-  head_view_dog_ =
-          head_view_dog_ * GetTranslationMatrix({0.5f, kDefaultFloorHeight, 0.5f});
+//  head_view_dog_ =
+//          head_view_ * GetTranslationMatrix({0.0f, kDefaultFloorHeight + 1.5f, 0.0f});
 
+  auto mat = head_view_dog_.m;
+  LOGD("(BEFORE)DOG_START");
+  for(int i = 0;i < 4;++i) {
+    std::string str = "DOG__\n\n" +
+                      std::to_string(mat[i][0]) + ",\t" +
+                      std::to_string(mat[i][1]) + ",\t"+
+                      std::to_string(mat[i][2]) + ",\t"+
+                      std::to_string(mat[i][3]) + ",\t" + "\n\n";
+    LOGD("%d|%s",i,str.c_str());
+  }
+  LOGD("(BEFORE)DOG_END");
+
+  mat = head_view_dog_.m;
+  LOGD("DOG_START");
+  for(int i = 0;i < 4;++i) {
+    std::string str = "\nDOG__\n\n" +
+                      std::to_string(mat[i][0]) + ",\t" +
+                      std::to_string(mat[i][1]) + ",\t"+
+                      std::to_string(mat[i][2]) + ",\t"+
+                      std::to_string(mat[i][3]) + ",\t" + "\n\n";
+    LOGD("%d|%s",i,str.c_str());
+  }
 
   // Bind buffer
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
@@ -213,13 +227,53 @@ void HelloCardboardApp::OnDrawFrame() {
      *
      */
     Matrix4x4 eye_view_dog = eye_matrix * head_view_dog_;
-    Matrix4x4 translation = GetTranslationMatrix({2.0f,2.0f,2.0f});
-    eye_view_dog = eye_view_dog * translation;
 
     Matrix4x4 projection_matrix =
         GetMatrixFromGlArray(projection_matrices_[eye]);
     Matrix4x4 modelview_target = eye_view * model_target_;
     Matrix4x4 modelview_dog_ = eye_view_dog * model_dog_;
+
+    auto mat = modelview_target.m;
+//    LOGD("(BEFORE)XION_START");
+//    for(int i = 0;i < 4;++i) {
+//      std::string str = "XION__\n\n" +
+//                        std::to_string(mat[i][0]) + ",\t" +
+//                        std::to_string(mat[i][1]) + ",\t"+
+//                        std::to_string(mat[i][2]) + ",\t"+
+//                        std::to_string(mat[i][3]) + ",\t" + "\n\n";
+//      LOGD("%d|%s",i,str.c_str());
+//    }
+//    LOGD("(BEFORE)XION_END");
+
+    const float SCALE_SIZE = 2.0f;
+    const float SCALE_SIZE_DOG = 0.05f;
+    // 🌈️️ Dog Model Scaling and Logging
+    ScaleXX(modelview_target, SCALE_SIZE);
+    ScaleXX(modelview_dog_,SCALE_SIZE_DOG);
+
+    mat = modelview_target.m;
+//    LOGD("XION_START");
+//    for(int i = 0;i < 4;++i) {
+//      std::string str = "XION__\n\n" +
+//              std::to_string(mat[i][0]) + ",\t" +
+//              std::to_string(mat[i][1]) + ",\t"+
+//              std::to_string(mat[i][2]) + ",\t"+
+//              std::to_string(mat[i][3]) + ",\t" + "\n\n";
+//      LOGD("%d|%s",i,str.c_str());
+//    }
+//    LOGD("XION_END");
+
+    //ScaleX(matrix, SCALE_SIZE, SCALE_SIZE, SCALE_SIZE);
+    // 🌈️️ Dog Model Scaling and Logging
+//    for(int i = 0;i < 4; ++i){
+//      const float SCALE_SIZE = 3.0f;
+//      ScaleM(modelview_dog_.m[i], SCALE_SIZE, SCALE_SIZE, SCALE_SIZE );
+//      LOGD("DOG____________________________START");
+//      for(int j = 0; j < 4; ++j)
+//        LOGD("DOG_%d|%d|%f",i,j,modelview_dog_.m[i][j]);
+//      LOGD("DOG___%d",i);
+//      LOGD("DOG____________________________END");
+//    }
 
     modelview_projection_target_ = projection_matrix * modelview_target;
     modelview_projection_room_ = projection_matrix * eye_view;
