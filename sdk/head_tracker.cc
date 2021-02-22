@@ -20,6 +20,7 @@
 #include "util/logging.h"
 #include "util/vector.h"
 #include "util/vectorutils.h"
+#include "util/logging.h"
 
 namespace cardboard {
 
@@ -42,6 +43,7 @@ HeadTracker::~HeadTracker() { UnregisterCallbacks(); }
 
 void HeadTracker::Pause() {
   if (!is_tracking_) {
+    CARDBOARD_LOGI("Xinfo,""","");
     return;
   }
 

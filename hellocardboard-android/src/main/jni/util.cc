@@ -417,6 +417,8 @@ Matrix4x4 GetTranslationMatrix(const std::array<float, 3>& translation) {
            {0.0f, 1.0f, 0.0f, 0.0f},
            {0.0f, 0.0f, 1.0f, 0.0f},
            {translation.at(0), translation.at(1), translation.at(2), 1.0f}}};
+
+
 }
 
 float AngleBetweenVectors(const std::array<float, 4>& vec1,

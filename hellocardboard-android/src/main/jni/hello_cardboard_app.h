@@ -162,9 +162,11 @@ class HelloCardboardApp {
   void DrawRoom();
 
   /*
-   * Draws the dog.
+   * Draws the dog & cat.
    * */
   void DrawDog();
+  void DrawCat();
+  void DrawAlpha();
 
   /**
    * Finds a new random position for the target object.
@@ -209,12 +211,18 @@ class HelloCardboardApp {
 
   Matrix4x4 head_view_;
   Matrix4x4 head_view_dog_;
+  Matrix4x4 head_view_cat_;
+  Matrix4x4 head_view_alpha_;
   Matrix4x4 model_target_;
   Matrix4x4 model_dog_;
+  Matrix4x4 model_cat_;
+  Matrix4x4 model_alpha_;
 
   Matrix4x4 modelview_projection_target_;
   Matrix4x4 modelview_projection_room_;
   Matrix4x4 modelview_projection_dog_;
+  Matrix4x4 modelview_projection_cat_;
+  Matrix4x4 modelview_projection_alpha_;
 
   TexturedMesh room_;
   Texture room_tex_;
@@ -224,6 +232,10 @@ class HelloCardboardApp {
    * * * * * * */
   TexturedMesh dog_;
   Texture dog_tex_;
+  TexturedMesh cat_;
+  Texture cat_tex_;
+  TexturedMesh alpha_;
+  Texture alpha_tex_;
 
   std::vector<TexturedMesh> target_object_meshes_;
   std::vector<Texture> target_object_not_selected_textures_;

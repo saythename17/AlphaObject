@@ -25,6 +25,13 @@
             android:src="@drawable/quantum_ic_close_white_24"
             android:layout_gravity="start|top"
             android:onClick="closeSample"/>
+        <ImageButton
+            style="@style/UiButton"
+            android:id="@+id/sdk_settings_button"
+            android:contentDescription="settings"
+            android:src="@drawable/ic_sdk"
+            android:layout_marginLeft="40dp"
+            android:onClick="goSdkActivity"/>
     </FrameLayout>
 
     <RelativeLayout

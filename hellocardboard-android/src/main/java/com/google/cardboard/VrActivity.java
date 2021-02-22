@@ -38,6 +38,9 @@ import android.widget.PopupMenu;
 import android.widget.Toast;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+
+import com.google.cardboard.sdk.QrCodeCaptureActivity;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
@@ -69,6 +72,7 @@ public class VrActivity extends AppCompatActivity implements PopupMenu.OnMenuIte
     super.onCreate(savedInstance);
 
     nativeApp = nativeOnCreate(getAssets());
+
 
     setContentView(R.layout.activity_vr);
     glView = findViewById(R.id.surface_view);
@@ -146,6 +150,11 @@ public class VrActivity extends AppCompatActivity implements PopupMenu.OnMenuIte
     if (hasFocus) {
       setImmersiveSticky();
     }
+  }
+
+  public void goSdkActivity(View view) {
+    Intent intent = new Intent(getBaseContext(), QrCodeCaptureActivity.class);
+    startActivity(intent);
   }
 
   private class Renderer implements GLSurfaceView.Renderer {

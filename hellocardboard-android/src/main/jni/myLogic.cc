@@ -1,5 +1,9 @@
 #include "myLogic.h"
 
+void TransposeM(Matrix4x4 mat) {
+
+}
+
 void SetIdentityMatrix(float *m) {
     memset((void*)m, 0, 16*sizeof(float));
     m[0] = m[5] = m [10] = m[15] = 1.0f;
@@ -23,9 +27,9 @@ void TranslateM(float *m, float x, float y, float z) {
 
 void TranslateX(Matrix4x4 &mat, float x, float y, float z) {
     auto& _matData = mat.m;
-    _matData[3][0] = x;
-    _matData[3][1] = y;
-    _matData[3][2] = z;
+    _matData[0][3] = x;
+    _matData[1][3] = y;
+    _matData[2][3] = z;
 }
 
 void SetRotateM(float *m, float a, float x, float y, float z) {
@@ -70,7 +74,97 @@ void SetRotateM(float *m, float a, float x, float y, float z) {
     }
 }
 
+void RotateX(Matrix4x4 &mat, float a, float x, float y, float z) {
+    float s,c;
+    auto& _mat = mat.m;
+    memset((void*)&mat, 0, 15*sizeof(float));
+    _mat[3][3] = 1.0f;
 
+    a *= PI/180.0f;
+    s = sin(a);
+    c = cos(a);
+
+    if(1.0f == x && 0.0f == y && 0.0f == z) {
+        _mat[1][1] = c; _mat[2][2] = c;
+        _mat[2][1] = s; _mat[1][2]  = -s;
+        _mat[0][0] = 1;
+    } else if (0.0f == x && 1.0f == y && 0.0f == z) {
+        _mat[0][0] = c; _mat[2][2] = c;
+        _mat[0][2] = s; _mat[2][0]  = -s;
+        _mat[1][1] = 1;
+    } else if (0.0f == x && 0.0f == y && 1.0f == z) {
+        _mat[0][0] = c; _mat[1][1] = c;
+        _mat[1][0] = s; _mat[0][1] = -s;
+        _mat[2][2] = 1;
+    } else {
+        normalize(x, y, z);
+        float nc = 1.0f - c;
+        float xy = x * y;
+        float yz = y * z;
+        float zx = z * x;
+        float xs = x * s;
+        float ys = y * s;
+        float zs = z * s;
+        _mat[0][0] = x*x*nc + c;
+        _mat[0][1] =  xy*nc - zs;
+        _mat[0][2] =  zx*nc + ys;
+        _mat[1][0] =  xy*nc + zs;
+        _mat[1][1] = y*y*nc +  c;
+        _mat[1][2] =  yz*nc - xs;
+        _mat[2][0] =  zx*nc - ys;
+        _mat[2][1] =  yz*nc + xs;
+        _mat[2][2] = z*z*nc +  c;
+    }
+}
+
+void RotateXX(Matrix4x4 &mat, float a, float x, float y, float z) {
+    float s, c;
+    auto &_mat = mat.m;
+    memset((void *) &mat, 0, 15 * sizeof(float));
+    _mat[3][3] = 1.0f;
+
+    a *= PI / 180.0f;
+    s = sin(a);
+    c = cos(a);
+
+    if (1.0f == x && 0.0f == y && 0.0f == z) {
+        _mat[1][1] = c;
+        _mat[2][2] = c;
+        _mat[2][1] = s;
+        _mat[1][2] = -s;
+        _mat[0][0] = 1;
+    } else if (0.0f == x && 1.0f == y && 0.0f == z) {
+        _mat[0][0] = c;
+        _mat[2][2] = c;
+        _mat[0][2] = s;
+        _mat[2][0] = -s;
+        _mat[1][1] = 1;
+    } else if (0.0f == x && 0.0f == y && 1.0f == z) {
+        _mat[0][0] = c;
+        _mat[1][1] = c;
+        _mat[1][0] = s;
+        _mat[0][1] = -s;
+        _mat[2][2] = 1;
+    } else {
+        normalize(x, y, z);
+        float nc = 1.0f - c;
+        float xy = x * y;
+        float yz = y * z;
+        float zx = z * x;
+        float xs = x * s;
+        float ys = y * s;
+        float zs = z * s;
+        _mat[0][0] = x * x * nc + c;
+        _mat[0][1] = xy * nc - zs;
+        _mat[0][2] = zx * nc + ys;
+        _mat[1][0] = xy * nc + zs;
+        _mat[1][1] = y * y * nc + c;
+        _mat[1][2] = yz * nc - xs;
+        _mat[2][0] = zx * nc - ys;
+        _mat[2][1] = yz * nc + xs;
+        _mat[2][2] = z * z * nc + c;
+    }
+}
 
 
 

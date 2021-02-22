@@ -40,6 +40,9 @@ constexpr float kAngleLimit = 0.2f;
 // Number of different possible targets
 constexpr int kTargetMeshCount = 3;
 
+float angle = 5.0f;
+float angle_cat = 5.0f;
+
 // Simple shaders to render .obj files without any lighting.
 constexpr const char* kObjVertexShader =
     R"glsl(
@@ -131,9 +134,16 @@ void HelloCardboardApp::OnSurfaceCreated(JNIEnv* env) {
    *
    */
     HELLOCARDBOARD_CHECK(dog_.Initialize(env, asset_mgr_, "dog.obj",
+                         obj_position_param_, obj_uv_param_));
+    HELLOCARDBOARD_CHECK(dog_tex_.Initialize(env, java_asset_mgr_, "dog_diffuse.png"));
+    HELLOCARDBOARD_CHECK(cat_.Initialize(env, asset_mgr_, "cat.obj",
+                         obj_position_param_, obj_uv_param_));
+    HELLOCARDBOARD_CHECK(cat_tex_.Initialize(env, java_asset_mgr_, "cat_diffuse.png"));
+
+    HELLOCARDBOARD_CHECK(alpha_.Initialize(env, asset_mgr_, "can.obj",
                                          obj_position_param_, obj_uv_param_));
-    HELLOCARDBOARD_CHECK(
-            dog_tex_.Initialize(env, java_asset_mgr_, "dog_diffuse.png"));
+    HELLOCARDBOARD_CHECK(alpha_tex_.Initialize(env, java_asset_mgr_, "can_diffuse.jpg"));
+
 
   HELLOCARDBOARD_CHECK(target_object_meshes_[0].Initialize(
       env, asset_mgr_, "Icosahedron.obj", obj_position_param_, obj_uv_param_));
@@ -158,6 +168,8 @@ void HelloCardboardApp::OnSurfaceCreated(JNIEnv* env) {
   // Target object first appears directly in front of user.
   model_target_ = GetTranslationMatrix({1.0f, 1.5f, kMinTargetDistance});
   model_dog_ = GetTranslationMatrix({1.0f,  kDefaultFloorHeight - 0.01f , 1.0f - kMaxTargetDistance});
+  model_cat_ = GetTranslationMatrix({1.0f, kDefaultFloorHeight, 1.0f - kMaxTargetDistance});
+  model_alpha_ = GetTranslationMatrix({1.0f, 1.5f, kMaxTargetDistance});
 
   CHECKGLERROR("OnSurfaceCreated");
 }
@@ -175,36 +187,50 @@ void HelloCardboardApp::OnDrawFrame() {
 
   // Update Head Pose.
   head_view_ = GetPose();
-  head_view_dog_ = GetPose();
 
   // Incorporate the floor height into the head_view
   head_view_ =
       head_view_ * GetTranslationMatrix({0.0f, kDefaultFloorHeight, 0.0f});
-//  head_view_dog_ =
-//          head_view_ * GetTranslationMatrix({0.0f, kDefaultFloorHeight + 1.5f, 0.0f});
+  head_view_dog_ =
+          head_view_ * GetTranslationMatrix({0.0f, kDefaultFloorHeight + 1.7f, -3.0f});
+  head_view_cat_ =
+          head_view_ * GetTranslationMatrix({-1.7f, kDefaultFloorHeight + 1.65f, -3.0f});
+  head_view_alpha_ =
+          head_view_ * GetTranslationMatrix({1.0f, 1.0f, -1.0f});
 
-  auto mat = head_view_dog_.m;
-  LOGD("(BEFORE)DOG_START");
+  //⭐️❤️🌈
+  angle += 0.7f;
+  if(angle_cat > 5.0f) angle_cat+=0.7f;
+  else if(angle_cat < 10.1f) angle_cat -=0.7f;
+  auto mat = model_dog_.m;
+  LOGD("(BEFORE)XION_START");
   for(int i = 0;i < 4;++i) {
-    std::string str = "DOG__\n\n" +
+    std::string str = "XION__\n\n" +
                       std::to_string(mat[i][0]) + ",\t" +
                       std::to_string(mat[i][1]) + ",\t"+
                       std::to_string(mat[i][2]) + ",\t"+
                       std::to_string(mat[i][3]) + ",\t" + "\n\n";
     LOGD("%d|%s",i,str.c_str());
   }
-  LOGD("(BEFORE)DOG_END");
+  LOGD("(BEFORE)XION_END");
 
-  mat = head_view_dog_.m;
-  LOGD("DOG_START");
+  RotateX(model_dog_, angle, 0.0f, 1.0f, 0.0f);
+  RotateXX(model_cat_, angle_cat, 0.0f, 1.0f, 0.0f);
+  RotateX(model_alpha_, angle_cat, 0.0f, 1.0f, 0.0f);
+  LOGD("???|%f",angle);
+
+  mat = model_dog_.m;
+  LOGD("XION_START");
   for(int i = 0;i < 4;++i) {
-    std::string str = "\nDOG__\n\n" +
+    std::string str = "XION__\n\n" +
                       std::to_string(mat[i][0]) + ",\t" +
                       std::to_string(mat[i][1]) + ",\t"+
                       std::to_string(mat[i][2]) + ",\t"+
                       std::to_string(mat[i][3]) + ",\t" + "\n\n";
     LOGD("%d|%s",i,str.c_str());
   }
+  LOGD("XION_END");
+  //⭐️❤️🌈
 
   // Bind buffer
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_);
@@ -227,11 +253,15 @@ void HelloCardboardApp::OnDrawFrame() {
      *
      */
     Matrix4x4 eye_view_dog = eye_matrix * head_view_dog_;
+    Matrix4x4 eye_view_cat = eye_matrix * head_view_cat_;
+    Matrix4x4 eye_view_alpha = eye_matrix * head_view_alpha_;
 
     Matrix4x4 projection_matrix =
         GetMatrixFromGlArray(projection_matrices_[eye]);
     Matrix4x4 modelview_target = eye_view * model_target_;
     Matrix4x4 modelview_dog_ = eye_view_dog * model_dog_;
+    Matrix4x4 modelview_cat_ = eye_view_cat * model_cat_;
+    Matrix4x4 modelview_alpha_ = eye_view_alpha * model_alpha_;
 
     auto mat = modelview_target.m;
 //    LOGD("(BEFORE)XION_START");
@@ -246,22 +276,13 @@ void HelloCardboardApp::OnDrawFrame() {
 //    LOGD("(BEFORE)XION_END");
 
     const float SCALE_SIZE = 2.0f;
-    const float SCALE_SIZE_DOG = 0.05f;
+    const float SCALE_SIZE_DOG = 0.025f;
+    const float SCALE_SIZE_ALPHA = 0.005f;
     // 🌈️️ Dog Model Scaling and Logging
     ScaleXX(modelview_target, SCALE_SIZE);
     ScaleXX(modelview_dog_,SCALE_SIZE_DOG);
-
-    mat = modelview_target.m;
-//    LOGD("XION_START");
-//    for(int i = 0;i < 4;++i) {
-//      std::string str = "XION__\n\n" +
-//              std::to_string(mat[i][0]) + ",\t" +
-//              std::to_string(mat[i][1]) + ",\t"+
-//              std::to_string(mat[i][2]) + ",\t"+
-//              std::to_string(mat[i][3]) + ",\t" + "\n\n";
-//      LOGD("%d|%s",i,str.c_str());
-//    }
-//    LOGD("XION_END");
+    ScaleXX(modelview_cat_,SCALE_SIZE_DOG);
+    ScaleXX(modelview_alpha_, SCALE_SIZE_ALPHA);
 
     //ScaleX(matrix, SCALE_SIZE, SCALE_SIZE, SCALE_SIZE);
     // 🌈️️ Dog Model Scaling and Logging
@@ -278,6 +299,8 @@ void HelloCardboardApp::OnDrawFrame() {
     modelview_projection_target_ = projection_matrix * modelview_target;
     modelview_projection_room_ = projection_matrix * eye_view;
     modelview_projection_dog_ = projection_matrix * modelview_dog_;
+    modelview_projection_cat_ = projection_matrix * modelview_cat_;
+    modelview_projection_alpha_ = projection_matrix * modelview_alpha_;
 
     // Draw room and target
     DrawWorld();
@@ -454,6 +477,8 @@ void HelloCardboardApp::DrawWorld() {
   DrawRoom();
   DrawTarget();
   DrawDog();
+  DrawCat();
+  DrawAlpha();
 }
 
 void HelloCardboardApp::DrawTarget() {
@@ -494,14 +519,37 @@ void HelloCardboardApp::DrawDog() {
   glUseProgram(obj_program_);
 
   std::array<float, 16> dog_array = modelview_projection_dog_.ToGlArray();
-  glUniformMatrix4fv(obj_modelview_projection_param_, 1, GL_FALSE,
-                     dog_array.data());
+  glUniformMatrix4fv(obj_modelview_projection_param_, 1, GL_FALSE, dog_array.data());
 
 
   dog_tex_.Bind();
   dog_.Draw();
 
   CHECKGLERROR("DrawDog");
+}
+
+void HelloCardboardApp::DrawCat() {
+  glUseProgram(obj_program_);
+
+  std::array<float, 16> cat_array = modelview_projection_cat_.ToGlArray();
+  glUniformMatrix4fv(obj_modelview_projection_param_, 1, GL_FALSE, cat_array.data());
+
+  cat_tex_.Bind();
+  cat_.Draw();
+
+  CHECKGLERROR("DrawCat");
+}
+
+void HelloCardboardApp::DrawAlpha() {
+  glUseProgram(obj_program_);
+
+  std::array<float, 16> alpha_array = modelview_projection_alpha_.ToGlArray();
+  glUniformMatrix4fv(obj_modelview_projection_param_, 1, GL_FALSE, alpha_array.data());
+
+  alpha_tex_.Bind();
+  alpha_.Draw();
+
+  CHECKGLERROR("DrawAlpha");
 }
 
 void HelloCardboardApp::HideTarget() {

@@ -2,7 +2,7 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name"
             description="Application name. [CHAR_LIMIT=30]">
-            Hello Cardboard</string>
+            AlphaObject</string>
 
     <!-- Strings present in 'VR' activity -->
     <string name="title_activity_vr"
