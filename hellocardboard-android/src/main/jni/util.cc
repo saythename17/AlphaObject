@@ -127,6 +127,7 @@ bool LoadObjFile(AAssetManager* mgr, const std::string& file_name,
       AAssetManager_open(mgr, file_name.c_str(), AASSET_MODE_STREAMING);
   if (asset == nullptr) {
     LOGE("Error opening asset %s", file_name.c_str());
+    LOGD("XXX | util.cc  130 line  asset: %s", file_name.c_str());
     return false;
   }
 
@@ -295,18 +296,21 @@ bool LoadObjFile(AAssetManager* mgr, const std::string& file_name,
     out_vertices->push_back(temp_positions[vertex_index * 3 + 1]);
     out_vertices->push_back(temp_positions[vertex_index * 3 + 2]);
     out_indices->push_back(i);
+    LOGD("XXX | util.cc  299 line  vertex_index : %d", vertex_index);
 
     if (is_normal_available) {
       unsigned int normal_index = normal_indices[i];
       out_normals->push_back(temp_normals[normal_index * 3]);
       out_normals->push_back(temp_normals[normal_index * 3 + 1]);
       out_normals->push_back(temp_normals[normal_index * 3 + 2]);
+      LOGD("XXX | util.cc  306 line  normal : %d", out_uv);
     }
 
     if (is_uv_available) {
       unsigned int uv_index = uv_indices[i];
       out_uv->push_back(temp_uvs[uv_index * 2]);
       out_uv->push_back(temp_uvs[uv_index * 2 + 1]);
+      LOGD("XXX | util.cc  311 line  out_uv : %d", out_uv);
     }
   }
 
@@ -533,9 +537,10 @@ bool Texture::Initialize(JNIEnv* env, jobject java_asset_mgr,
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   if (!LoadPngFromAssetManager(env, java_asset_mgr, GL_TEXTURE_2D,
                                texture_path)) {
-    LOGE("Couldn't load texture.");
+    LOGE("XXX Couldn't load texture.");
     return false;
   }
+  LOGD("XXX | you can load your texture");
   glGenerateMipmap(GL_TEXTURE_2D);
   return true;
 }

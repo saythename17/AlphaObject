@@ -69,6 +69,34 @@ constexpr const char* kObjFragmentShader =
       gl_FragColor = texture2D(u_Texture, vec2(v_UV.x, 1.0 - v_UV.y));
     })glsl";
 
+//⭐️❤️🌈 XION
+constexpr constexpr char* xObjectVertexShader =
+            R"glsl(
+      layout (location = 0) in vec3 aPos;
+      layout (location = 1) in vec3 aNormal;
+      layout (location = 2) in vec2 aTexCoords;
+      out vec2 TexCoords;
+      uniform mat4 model;
+      uniform mat4 view;
+      uniform mat4 projection;
+
+      void main() {
+          gl_Position = projection * view * model * vec4(aPos, 1.0);
+          TexCoords = aTexCoords;
+      }
+      )glsl";
+
+constexpr constexpr char* xObjectFragmentShader =
+        R"glsl(
+        out vec4 FragColor;
+        in vec2 TexCoords;
+        uniform sampler2D texture_diffuse1;
+
+        void main() {
+            FragColor = texture(texture_diffuse1, TexCoords);
+        }
+        )glsl";
+
 }  // anonymous namespace
 
 HelloCardboardApp::HelloCardboardApp(JavaVM* vm, jobject obj, jobject asset_mgr_obj)
@@ -140,9 +168,10 @@ void HelloCardboardApp::OnSurfaceCreated(JNIEnv* env) {
                          obj_position_param_, obj_uv_param_));
     HELLOCARDBOARD_CHECK(cat_tex_.Initialize(env, java_asset_mgr_, "cat_diffuse.png"));
 
-    HELLOCARDBOARD_CHECK(alpha_.Initialize(env, asset_mgr_, "can.obj",
+    HELLOCARDBOARD_CHECK(alpha_.Initialize(env, asset_mgr_, "QuadSphere.obj",
                                          obj_position_param_, obj_uv_param_));
-    HELLOCARDBOARD_CHECK(alpha_tex_.Initialize(env, java_asset_mgr_, "can_diffuse.jpg"));
+    HELLOCARDBOARD_CHECK(alpha_tex_.Initialize(env, java_asset_mgr_, "sky.png"));
+
 
 
   HELLOCARDBOARD_CHECK(target_object_meshes_[0].Initialize(
@@ -192,11 +221,11 @@ void HelloCardboardApp::OnDrawFrame() {
   head_view_ =
       head_view_ * GetTranslationMatrix({0.0f, kDefaultFloorHeight, 0.0f});
   head_view_dog_ =
-          head_view_ * GetTranslationMatrix({0.0f, kDefaultFloorHeight + 1.7f, -3.0f});
+          head_view_ * GetTranslationMatrix({0.0f, kDefaultFloorHeight + 1.66f, -3.0f});
   head_view_cat_ =
-          head_view_ * GetTranslationMatrix({-1.7f, kDefaultFloorHeight + 1.65f, -3.0f});
+          head_view_ * GetTranslationMatrix({-1.7f, kDefaultFloorHeight + 1.66f, -3.0f});
   head_view_alpha_ =
-          head_view_ * GetTranslationMatrix({1.0f, 1.0f, -1.0f});
+          head_view_ * GetTranslationMatrix({1.0f, 2.0f, -1.0f});
 
   //⭐️❤️🌈
   angle += 0.7f;
@@ -277,7 +306,7 @@ void HelloCardboardApp::OnDrawFrame() {
 
     const float SCALE_SIZE = 2.0f;
     const float SCALE_SIZE_DOG = 0.025f;
-    const float SCALE_SIZE_ALPHA = 0.005f;
+    const float SCALE_SIZE_ALPHA = 0.55f;
     // 🌈️️ Dog Model Scaling and Logging
     ScaleXX(modelview_target, SCALE_SIZE);
     ScaleXX(modelview_dog_,SCALE_SIZE_DOG);
@@ -304,6 +333,7 @@ void HelloCardboardApp::OnDrawFrame() {
 
     // Draw room and target
     DrawWorld();
+    LOGD("DRAW");
   }
 
   // Render

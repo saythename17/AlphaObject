@@ -134,8 +134,11 @@ CardboardLensDistortion* CardboardLensDistortion_create(
 void CardboardLensDistortion_destroy(CardboardLensDistortion* lens_distortion) {
   if (CARDBOARD_IS_NOT_INITIALIZED() ||
       CARDBOARD_IS_ARG_NULL(lens_distortion)) {
+    //⭐️ XION space.obj -> lens_distotion == null
+    CARDBOARD_LOGI("XXX : lens_distortion : %s",lens_distortion);
     return;
   }
+  CARDBOARD_LOGI("XXX : lens_distortion : %s",lens_distortion);
   delete lens_distortion;
 }
 

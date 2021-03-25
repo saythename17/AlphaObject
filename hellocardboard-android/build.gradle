@@ -1,5 +1,12 @@
 apply plugin: 'com.android.application'
 
+apply plugin: 'com.google.ar.sceneform.plugin'
+
+sceneform.asset('sampledata/model/alpha_phone/alpha_phone.obj', // 'Source Asset Path' specified during import.
+        'default',                    // 'Material Path' specified during import.
+        'sampledata/model/alpha_phone/alpha_phone.sfa', // '.sfa Output Path' specified during import.
+        'sampledata/model/alpha_phone/alpha_phone')
+
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.0"
@@ -8,11 +15,11 @@ android {
     }
     defaultConfig {
         applicationId "com.google.cardboard.hellocardboard"
-        minSdkVersion 18
+        minSdkVersion 24 // Sceneform requires minSdkVersion >= 24.
         targetSdkVersion 30
         versionCode 1
         versionName "1.4.1"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         ndk {
             abiFilters 'armeabi-v7a', 'arm64-v8a'
         }
@@ -42,10 +49,30 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:28.0.0'
 
-    implementation 'com.android.support:design:28.0.0'
+    implementation 'com.google.android.material:material:1.0.0'
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'com.google.android.material:material:1.1.0'
+    
     implementation project(":sdk")
+
+    // Provides ARCore Session and related resources.
+    //implementation 'com.google.ar:core:1.15.0'
+
+    // ARCore (Google Play Services for AR) library.
+    implementation 'com.google.ar:core:1.23.0'
+
+    // Obj - a simple Wavefront OBJ file loader
+    // https://github.com/javagl/Obj
+    implementation 'de.javagl:obj:0.2.1'
+
+    // Provides ArFragment, and other UX resources.
+    implementation 'com.google.ar.sceneform.ux:sceneform-ux:1.15.0'
+
+    // Alternatively, use ArSceneView without the UX dependency.
+    implementation 'com.google.ar.sceneform:core:1.15.0'
+
+    implementation 'com.google.ar.sceneform:assets:1.15.0'
 }
 
 // The dependencies for NDK builds live inside the .aar files so they need to

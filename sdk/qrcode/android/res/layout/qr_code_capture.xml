@@ -58,6 +58,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
+                android:background="#CB3E3E3E"
                 android:orientation="horizontal">
                 <View
                     android:layout_width="0dp"
@@ -71,17 +72,17 @@
                     android:paddingRight="20dp"
                     android:gravity="center_vertical"
                     android:text="@string/cannot_find_symbol"
-                    android:textColor="@color/darker_gray"/>
+                    android:textColor="@color/footer_medium_grey"/>
                 <View
                     style="@style/vertical_divider"
-                    android:background="#1F000000"
+                    android:background="@color/footer_light_grey"
                     android:layout_width="1dp"
                     android:layout_marginTop="10dp"
                     android:layout_marginBottom="10dp"/>
                 <TextView
                     android:id="@+id/skip"
                     style="@style/text_14sp_sans_serif_medium"
-                    android:textColor="@color/darker_gray"
+                    android:textColor="@color/footer_light_grey"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:paddingLeft="20dp"

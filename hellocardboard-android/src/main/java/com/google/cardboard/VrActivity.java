@@ -22,13 +22,14 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.opengl.GLSurfaceView;
-import android.opengl.Matrix;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -36,10 +37,38 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.PopupMenu;
 import android.widget.Toast;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 
+import com.google.ar.core.Anchor;
+import com.google.ar.core.HitResult;
+import com.google.ar.core.Plane;
+import com.google.ar.core.Session;
+import com.google.ar.sceneform.AnchorNode;
+import com.google.ar.sceneform.assets.RenderableSource;
+import com.google.ar.sceneform.rendering.ModelRenderable;
+import com.google.ar.sceneform.rendering.Texture;
+import com.google.ar.sceneform.rendering.ViewRenderable;
+import com.google.ar.sceneform.ux.ArFragment;
+import com.google.ar.sceneform.ux.BaseArFragment;
+import com.google.ar.sceneform.ux.TransformableNode;
+import com.google.cardboard.common.helpers.DepthSettings;
+import com.google.cardboard.common.helpers.DisplayRotationHelper;
+import com.google.cardboard.common.helpers.InstantPlacementSettings;
+import com.google.cardboard.common.helpers.SnackbarHelper;
+import com.google.cardboard.common.helpers.TapHelper;
+import com.google.cardboard.common.helpers.TrackingStateHelper;
+import com.google.cardboard.common.samplerender.Framebuffer;
+import com.google.cardboard.common.samplerender.Mesh;
+import com.google.cardboard.common.samplerender.SampleRender;
+import com.google.cardboard.common.samplerender.Shader;
+import com.google.cardboard.common.samplerender.VertexBuffer;
+import com.google.cardboard.common.samplerender.arcore.BackgroundRenderer;
+import com.google.cardboard.common.samplerender.arcore.PlaneRenderer;
+import com.google.cardboard.common.samplerender.arcore.SpecularCubemapFilter;
 import com.google.cardboard.sdk.QrCodeCaptureActivity;
+
+import java.util.ArrayList;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -65,6 +94,91 @@ public class VrActivity extends AppCompatActivity implements PopupMenu.OnMenuIte
   private long nativeApp;
 
   private GLSurfaceView glView;
+
+  private static final String GLTF_ASSET =
+          "https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Duck/glTF/Duck.gltf";
+
+  // See the definition of updateSphericalHarmonicsCoefficients for an explanation of these
+  // constants.
+  private static final float[] sphericalHarmonicFactors = {
+          0.282095f,
+          -0.325735f,
+          0.325735f,
+          -0.325735f,
+          0.273137f,
+          -0.273137f,
+          0.078848f,
+          -0.273137f,
+          0.136569f,
+  };
+
+  private static final float Z_NEAR = 0.1f;
+  private static final float Z_FAR = 100f;
+
+  private static final int CUBEMAP_RESOLUTION = 16;
+  private static final int CUBEMAP_NUMBER_OF_IMPORTANCE_SAMPLES = 32;
+
+  // Rendering. The Renderers are created here, and initialized when the GL surface is created.
+  private GLSurfaceView surfaceView;
+
+  private boolean installRequested;
+
+  private Session session;
+  private final SnackbarHelper messageSnackbarHelper = new SnackbarHelper();
+  private DisplayRotationHelper displayRotationHelper;
+  private final TrackingStateHelper trackingStateHelper = new TrackingStateHelper(this);
+  private TapHelper tapHelper;
+  private SampleRender render;
+
+  private PlaneRenderer planeRenderer;
+  private BackgroundRenderer backgroundRenderer;
+  private Framebuffer virtualSceneFramebuffer;
+  private boolean hasSetTextureNames = false;
+
+  private final DepthSettings depthSettings = new DepthSettings();
+  private boolean[] depthSettingsMenuDialogCheckboxes = new boolean[2];
+
+  private final InstantPlacementSettings instantPlacementSettings = new InstantPlacementSettings();
+  private boolean[] instantPlacementSettingsMenuDialogCheckboxes = new boolean[1];
+
+  // Assumed distance from the device camera to the surface on which user will try to place objects.
+  // This value affects the apparent scale of objects while the tracking method of the
+  // Instant Placement point is SCREENSPACE_WITH_APPROXIMATE_DISTANCE.
+  // Values in the [0.2, 2.0] meter range are a good choice for most AR experiences. Use lower
+  // values for AR experiences where users are expected to place objects on surfaces close to the
+  // camera. Use larger values for experiences where the user will likely be standing and trying to
+  // place an object on the ground or floor in front of them.
+  private static final float APPROXIMATE_DISTANCE_METERS = 2.0f;
+
+  // Point Cloud
+  private VertexBuffer pointCloudVertexBuffer;
+  private Mesh pointCloudMesh;
+  private Shader pointCloudShader;
+  // Keep track of the last point cloud rendered to avoid updating the VBO if point cloud
+  // was not changed.  Do this using the timestamp since we can't compare PointCloud objects.
+  private long lastPointCloudTimestamp = 0;
+
+  // Virtual object (ARCore pawn)
+  private Mesh virtualObjectMesh;
+  private Shader virtualObjectShader;
+  private final ArrayList<Anchor> anchors = new ArrayList<>();
+
+  // Environmental HDR
+  private Texture dfgTexture;
+  private SpecularCubemapFilter cubemapFilter;
+
+  // Temporary matrix allocated here to reduce number of allocations for each frame.
+  private final float[] modelMatrix = new float[16];
+  private final float[] viewMatrix = new float[16];
+  private final float[] projectionMatrix = new float[16];
+  private final float[] modelViewMatrix = new float[16]; // view x model
+  private final float[] modelViewProjectionMatrix = new float[16]; // projection x view x model
+  private final float[] sphericalHarmonicsCoefficients = new float[9 * 3];
+  private final float[] viewInverseMatrix = new float[16];
+  private final float[] worldLightDirection = {0.0f, 0.0f, 0.0f, 0.0f};
+  private final float[] viewLightDirection = new float[4]; // view x world light direction
+
+  //⭐️
 
   @SuppressLint("ClickableViewAccessibility")
   @Override
@@ -93,8 +207,7 @@ public class VrActivity extends AppCompatActivity implements PopupMenu.OnMenuIte
           return false;
         });
 
-    // TODO(b/139010241): Avoid that action and status bar are displayed when pressing settings
-    // button.
+    // TODO(b/139010241): Avoid that action and status bar are displayed when pressing settings button.
     setImmersiveSticky();
     View decorView = getWindow().getDecorView();
     decorView.setOnSystemUiVisibilityChangeListener(
@@ -111,6 +224,55 @@ public class VrActivity extends AppCompatActivity implements PopupMenu.OnMenuIte
 
     // Prevents screen from dimming/locking.
     getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+//    ModelRenderable.builder()
+//            // To load as an asset from the 'assets' folder ('src/main/assets/andy.sfb'):
+//            .setSource(this, R.raw.ferret)
+//
+//            // Instead, load as a resource from the 'res/raw' folder ('src/main/res/raw/andy.sfb'):
+//            //.setSource(this, R.raw.andy)
+//
+//            .build()
+//            .thenAccept(renderable -> ferretRenderable = renderable)
+//            .exceptionally(
+//                    throwable -> {
+//                      Log.e(TAG, "Unable to load Renderable.", throwable);
+//                      return null;
+//                    });
+    //arFragment.setOnTapArPlaneListener(new BaseArFragment.OnTapArPlaneListener() {
+//    OnTapArPlaneListener  @Override
+//      public void onTapPlane(HitResult hitResult, Plane plane, MotionEvent motionEvent) {
+//        Anchor anchor = hitResult.createAnchor();
+//        AnchorNode anchorNode = new AnchorNode(anchor);
+//        anchorNode.setParent(arFragment.getArSceneView().getScene());
+//
+//        TransformableNode ferret = new TransformableNode(arFragment.getTransformationSystem());
+//        ferret.setParent(anchorNode);
+//        ferret.setRenderable(ferretRenderable);
+//        ferret.select();
+//      }
+//    });
+//
+//    ModelRenderable.builder()
+//            .setSource(this, RenderableSource.builder().setSource(
+//                    this,
+//                    Uri.parse(GLTF_ASSET),
+//                    RenderableSource.SourceType.GLTF2)
+//                    .setScale(0.25f)  // Scale the original model to 50%.
+//                    .setRecenterMode(RenderableSource.RecenterMode.ROOT)
+//                    .build())
+//            .setRegistryId(GLTF_ASSET)
+//            .build()
+//            .thenAccept(renderable -> ferretRenderable = renderable)
+//            .exceptionally(
+//                    throwable -> {
+//                      Toast toast =
+//                              Toast.makeText(this, "Unable to load renderable " +
+//                                      GLTF_ASSET, Toast.LENGTH_LONG);
+//                      toast.setGravity(Gravity.CENTER, 0, 0);
+//                      toast.show();
+//                      return null;
+//                    });
   }
 
   @Override

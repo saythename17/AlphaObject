@@ -12,6 +12,9 @@ buildscript {
         
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
+
+        classpath 'com.google.ar.sceneform:plugin:1.15.0'
+        //❤️XION - To build the ar sceneform object
     }
 }
 
